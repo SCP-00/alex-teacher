@@ -1,0 +1,15 @@
+kokoro-onnx>=0.2.0
+piper-tts>=1.2.0
+faster-whisper>=1.1.0
+torch>=2.0.0
+numpy>=1.24.0
+psutil>=5.9.0
+pynvml>=11.5.0
+cutlet>=0.3.0
+qwen-tts>=0.1.0        # Qwen3-TTS voice clone (cast de cuentos)
+soundfile>=0.12.0      # guardado de refs de voz
+
+# Modelo (una vez, via setup_qwen3tts.sh o setup_qwen3tts_hf.sh):
+#   Qwen3-TTS-12Hz-0.6B-Base  → ~/.local/share/alex/models/qwen3tts/       (por defecto)
+#   Qwen3-TTS-12Hz-1.7B-Base  → ~/.local/share/alex/models/qwen3tts-1.7b/  (con QWEN3_TTS_MODEL=1.7b)
+pykakasi>=2.3.0  # kanji→hiragana para TTS japonés (espeak-ng los lee como chino)

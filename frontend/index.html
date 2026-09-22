@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0c0a09">
+<title>Alex — Teacher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0c0a09; --surface: #1c1917; --card: #292524;
+    --border: rgba(250,250,249,.09);
+    --text: #fafaf9; --text-2: rgba(250,250,249,.7); --text-3: rgba(250,250,249,.42);
+    --accent: #4a7cf7; --accent-soft: rgba(74,124,247,.16);
+    --ok: #7bd88f;
+  }
+  html { color-scheme: dark; }
+  body {
+    font-family: 'IBM Plex Sans', 'Hanken Grotesk', 'Barlow', system-ui, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh;
+    -webkit-font-smoothing: antialiased; letter-spacing: .01em;
+  }
+  header {
+    padding: 16px 24px; display: flex; align-items: center; gap: 16px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .back { font-size: 20px; cursor: pointer; color: var(--text-2); transition: color .15s; }
+  .back:hover { color: var(--text); }
+  header h1 { font-size: 15px; font-weight: 400; letter-spacing: .02em; flex: 1; }
+  header select, .header-btn {
+    background: var(--card); border: 1px solid var(--border); color: var(--text);
+    padding: 9px 14px; font-size: 13px; font-family: inherit; outline: none;
+    cursor: pointer; transition: border-color .15s;
+  }
+  header select:hover, .header-btn:hover { border-color: var(--accent); }
+  .container { max-width: 720px; margin: 0 auto; padding: 40px 24px; }
+  .input-card {
+    background: var(--surface); padding: 24px;
+    border: 1px solid var(--border); margin-bottom: 40px;
+  }
+  .input-card textarea {
+    width: 100%; background: transparent; border: none; color: var(--text);
+    font-size: 16px; font-family: inherit; resize: none; outline: none;
+    min-height: 72px; line-height: 1.6; font-weight: 300;
+  }
+  .input-card textarea::placeholder { color: var(--text-3); }
+  .input-card .actions { display: flex; gap: 12px; margin-top: 16px; align-items: center; }
+  .input-card .actions button {
+    padding: 12px 28px; border: none; font-family: inherit;
+    font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+    cursor: pointer; transition: opacity .15s; min-height: 44px;
+  }
+  .send-btn { background: var(--accent); color: #fff; }
+  .send-btn:hover { opacity: .85; }
+  .send-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .tts-toggle {
+    background: transparent; border: 1px solid var(--border); color: var(--text-2);
+  }
+  .tts-toggle:hover { border-color: var(--ok); }
+  .tts-toggle.active { background: rgba(123,216,143,.12); border-color: var(--ok); color: var(--ok); }
+  .mic-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--text-2);
+    font-size: 15px; padding: 12px 16px; min-width: 48px;
+  }
+  .mic-btn:hover { border-color: var(--accent); color: var(--text); }
+  .mic-btn.recording { background: var(--accent); border-color: var(--accent); color: #fff; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+  .mic-status { font-size: 12px; color: var(--text-3); letter-spacing: .04em; }
+  #sys-stats { font-size: 12px; color: var(--text-3); letter-spacing: .04em; white-space: nowrap; }
+  .output-grid { display: flex; flex-direction: column; gap: 1px; background: var(--border); }
+  .card-output {
+    background: var(--bg); padding: 28px;
+    border-left: 3px solid var(--accent); animation: fadeIn .3s;
+  }
+  .card-output .label {
+    font-size: 11px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase;
+    margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
+    color: var(--text-3);
+  }
+  .card-output .label .badge {
+    padding: 3px 10px; font-size: 10px; font-weight: 500; letter-spacing: .12em;
+    background: var(--accent-soft); color: var(--accent);
+  }
+  .card-output .content {
+    font-size: 15px; line-height: 1.75; word-wrap: break-word; overflow-wrap: break-word;
+    white-space: pre-wrap; font-weight: 300; color: var(--text);
+  }
+  /* Un acento — jerarquía por opacidad, no por color (Swiss) */
+  .card-output.pronunciation { border-left-color: rgba(74,124,247,.75); }
+  .card-output.pronunciation .label .badge { opacity: .75; }
+  .card-output.translation { border-left-color: rgba(74,124,247,.55); }
+  .card-output.translation .label .badge { opacity: .55; }
+  .card-output.explanation { border-left-color: rgba(74,124,247,.35); }
+  .card-output.explanation .label .badge { opacity: .35; }
+  .card-output.exercise { border-left-color: rgba(74,124,247,.2); }
+  .card-output.exercise .label .badge { opacity: .2; }
+  .card-output .actions { display: flex; gap: 8px; margin-top: 16px; }
+  .card-output .actions button {
+    background: none; border: 1px solid transparent; color: var(--text-2); cursor: pointer;
+    font-size: 13px; padding: 8px 12px; min-height: 40px; font-family: inherit;
+    transition: all .15s;
+  }
+  .card-output .actions button:hover { background: var(--card); color: var(--text); }
+  .typing { display: flex; gap: 4px; padding: 28px; align-items: center; }
+  .typing span { width: 5px; height: 5px; background: var(--text-3); border-radius: 50%; animation: bounce 1.4s infinite; }
+  .typing span:nth-child(2) { animation-delay: .2s; }
+  .typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .history-item { margin-bottom: 40px; padding-bottom: 40px; border-bottom: 1px solid var(--border); }
+  .history-item:last-child { border-bottom: none; }
+  .history-item .user-msg {
+    padding: 14px 18px; background: var(--surface);
+    margin-bottom: 1px; font-size: 14px; color: var(--text-2); font-weight: 300;
+    border-left: 3px solid var(--accent);
+  }
+  @media (max-width: 600px) {
+    .container { padding: 24px 16px; }
+    header select { max-width: 110px; }
+    .card-output { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <span class="back" onclick="history.back()">←</span>
+  <h1>🎓 Teacher</h1>
+  <select id="target-lang"><option value="">Auto-detect</option><option value="es">Español → English</option><option value="en">English → Español</option><option value="ja">→ 日本語</option></select>
+  <button id="btn-stories" class="header-btn" onclick="toggleStories()">📖 Cuentos</button>
+  <span id="sys-stats"></span>
+</header>
+
+<div class="container">
+  <div class="input-card">
+    <textarea id="input" rows="2" placeholder="Write something to learn..."></textarea>
+    <div class="actions">
+      <button class="send-btn" id="send-btn" onclick="send()">Send</button>
+      <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Habla para escribir">🎤</button>
+      <button class="tts-toggle" id="tts-toggle" onclick="toggleTTS()">🔊 Auto TTS</button>
+      <span class="mic-status" id="mic-status"></span>
+    </div>
+  </div>
+
+  <div id="history"></div>
+  <div class="output-grid" id="output"></div>
+</div>
+
+<script>
+let history = [];
+let autoTTS = true;   // tutor de voz: responde hablando por defecto (se puede apagar)
+let isWaiting = false;
+let lastParsed = {};
+
+function escapeHtml(t) {
+  const d = document.createElement('div');
+  d.textContent = t;
+  return d.innerHTML;
+}
+
+function toggleTTS() {
+  autoTTS = !autoTTS;
+  document.getElementById('tts-toggle').classList.toggle('active', autoTTS);
+}
+document.getElementById('tts-toggle').classList.add('active');  // autoTTS por defecto ON
+
+// ── Micrófono: graba WAV PCM int16 directo (compatible con /api/asr) ──
+let mediaRecorder = null, audioChunks = [], isRecording = false;
+let audioCtx = null, micStream = null, audioProcessor = null, micSource = null, pcmChunks = [];
+
+function encodeWav(samples, sampleRate) {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+  const writeStr = (off, s) => { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
+  writeStr(0, 'RIFF'); view.setUint32(4, 36 + samples.length * 2, true); writeStr(8, 'WAVE');
+  writeStr(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  writeStr(36, 'data'); view.setUint32(40, samples.length * 2, true);
+  let off = 44;
+  for (let i = 0; i < samples.length; i++, off += 2) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+  return new Blob([buffer], { type: 'audio/wav' });
+}
+
+function setMicStatus(msg) {
+  document.getElementById('mic-status').textContent = msg || '';
+}
+
+async function toggleMic() {
+  const btn = document.getElementById('mic-btn');
+  if (!isRecording) {
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      micSource = audioCtx.createMediaStreamSource(micStream);
+      audioProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
+      pcmChunks = [];
+      audioProcessor.onaudioprocess = e => {
+        pcmChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+      };
+      micSource.connect(audioProcessor);
+      audioProcessor.connect(audioCtx.destination);
+      isRecording = true;
+      btn.classList.add('recording'); btn.textContent = '⏹';
+      setMicStatus('🎙️ Escuchando — pulsa ⏹ para enviar');
+    } catch(e) { setMicStatus('⚠️ Permiso de micrófono denegado'); }
+    return;
+  }
+  isRecording = false;
+  btn.classList.remove('recording'); btn.textContent = '🎤';
+  try {
+    micSource.disconnect(); audioProcessor.disconnect();
+    micStream.getTracks().forEach(t => t.stop());
+  } catch(e) {}
+  if (!pcmChunks.length) { setMicStatus(''); return; }
+  const flat = [];
+  pcmChunks.forEach(c => { for (let i = 0; i < c.length; i++) flat.push(c[i]); });
+  const sampleRate = audioCtx ? (audioCtx.sampleRate || 16000) : 16000;
+  const wavBlob = encodeWav(new Float32Array(flat), sampleRate);
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const b64 = reader.result.split(',')[1];
+    setMicStatus('🧠 Transcribiendo...');
+    try {
+      const resp = await fetch('/api/asr', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audio: b64, lang: 'auto' })
+      });
+      const data = await resp.json();
+      if (data.text && data.text.trim()) {
+        document.getElementById('input').value = data.text.trim();
+        setMicStatus(`✅ "${data.text.trim().slice(0, 60)}"`);
+        send();
+      } else if (data.empty) {
+        setMicStatus('🗣️ No te escuché — intenta de nuevo');
+      } else if (data.error) {
+        setMicStatus('⚠️ ' + data.error);
+      }
+    } catch(e) { setMicStatus('⚠️ Error de ASR'); }
+  };
+  reader.readAsDataURL(wavBlob);
+}
+
+// ── Métricas del sistema (lo mismo que ve el agente en /api/stats) ──
+async function refreshStats() {
+  try {
+    const r = await fetch('/api/stats');
+    const d = await r.json();
+    const parts = [];
+    if (d.llama_connected !== undefined) parts.push(d.llama_connected ? 'llama ✓' : 'llama ✗');
+    if (d.tokens_generated) parts.push(d.tokens_generated + ' tok');
+    if (d.tokens_per_sec) parts.push(Math.round(d.tokens_per_sec) + ' tps');
+    if (d.vram_used_mb) parts.push(Math.round(d.vram_used_mb) + ' MB VRAM');
+    document.getElementById('sys-stats').textContent = parts.length ? '⚙ ' + parts.join(' · ') : '';
+  } catch(e) {}
+}
+setInterval(refreshStats, 5000); refreshStats();
+
+function createCard(field, content, ttsText) {
+  const div = document.createElement('div');
+  div.className = `card-output ${field}`;
+  div.style.animation = 'none';
+  div.offsetHeight;
+  div.style.animation = 'fadeIn .3s';
+
+  const labels = {
+    text: '📖 Text', pronunciation: '🔤 Pronunciation', translation: '🌍 Translation',
+    explanation: '💡 Explanation', exercise: '✍️ Exercise'
+  };
+  const colors = {
+    text: '#7c3aed', pronunciation: '#f59e0b', translation: '#3b82f6',
+    explanation: '#10b981', exercise: '#ef4444'
+  };
+
+  div.innerHTML = `
+    <div class="label">
+      <span>${labels[field] || field}</span>
+      <span class="badge">${field}</span>
+    </div>
+    <div class="content">${escapeHtml(content)}</div>
+    <div class="actions">
+      <button class="tts-card-btn" data-tts-text="${escapeHtml(ttsText || content)}">🔊</button>
+      <button onclick="copyCard(this)">📋</button>
+    </div>`;
+  return div;
+}
+
+function showTyping() {
+  const area = document.getElementById('output');
+  const div = document.createElement('div'); div.className = 'typing'; div.id = 'typing';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  area.appendChild(div); div.scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideTyping() { const t = document.getElementById('typing'); if (t) t.remove(); }
+
+async function send() {
+  const input = document.getElementById('input');
+  const text = input.value.trim();
+  if (!text || isWaiting) return;
+  isWaiting = true;
+  document.getElementById('send-btn').disabled = true;
+
+  // Show user message in history
+  const historyDiv = document.getElementById('history');
+  const historyItem = document.createElement('div');
+  historyItem.className = 'history-item';
+  historyItem.innerHTML = `<div class="user-msg">👤 ${escapeHtml(text)}</div><div class="output-grid" data-response></div>`;
+  historyDiv.appendChild(historyItem);
+  const responseGrid = historyItem.querySelector('[data-response]');
+
+  input.value = '';
+  history.push({ role: 'user', content: text });
+  showTyping();
+
+  try {
+    const targetLang = document.getElementById('target-lang').value;
+    // Ventana de contexto: solo los últimos 12 turnos viajan al LLM (QA 2026-09-22)
+    const body = { messages: history.slice(-12), mode: 'teacher' };
+    if (targetLang) body.target_lang = targetLang;
+
+    const resp = await fetch('/api/chat', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    hideTyping();
+
+    if (!resp.ok) {
+      responseGrid.innerHTML = '<div class="card-output" style="border-left-color:#ef4444"><div class="content">⚠️ Server error</div></div>';
+      isWaiting = false;
+      document.getElementById('send-btn').disabled = false;
+      return;
+    }
+
+    const data = await resp.json();
+    const parsed = data.parsed || {};
+
+    if (data.choices?.[0]?.message?.content) {
+      history.push({ role: 'assistant', content: data.choices[0].message.content });
+    }
+
+    // Show fields that have content
+    const fields = ['text', 'pronunciation', 'translation', 'explanation', 'exercise'];
+    let hasContent = false;
+    for (const field of fields) {
+      if (parsed[field]) {
+        // 🔊 Kokoro lee japonés vía espeak-ng: los kanji salen con lectura
+        // china → usar 【TTS_READING】 (romaji) SOLO si el texto tiene japonés.
+        // Para es/en el TTS lee el texto directo (el 2B a veces fonetiza de más).
+        const hasJa = /[\u3040-\u30ff\u4e00-\u9fff]/.test(parsed[field]);
+        const spoken = field === 'text' ? (hasJa && parsed.tts_reading ? parsed.tts_reading : parsed[field]) : parsed[field];
+        responseGrid.appendChild(createCard(field, parsed[field], spoken));
+        hasContent = true;
+        if (autoTTS && field === 'text') {
+          setTimeout(() => playTTS(spoken), 300);
+        }
+      }
+    }
+
+    if (!hasContent) {
+      const content = data.choices?.[0]?.message?.content || '';
+      if (content) {
+        responseGrid.appendChild(createCard('text', content));
+      }
+    }
+
+    responseGrid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } catch(e) {
+    hideTyping();
+    const responseGrid = document.querySelector('[data-response]:last-child');
+    if (responseGrid) {
+      responseGrid.innerHTML = '<div class="card-output" style="border-left-color:#ef4444"><div class="content">⚠️ Connection error</div></div>';
+    }
+  }
+
+  isWaiting = false;
+  document.getElementById('send-btn').disabled = false;
+  document.getElementById('input').focus();
+}
+
+async function playTTS(text) {
+  if (!text) return;
+  try {
+    const resp = await fetch('/api/tts', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, mode: 'teacher' })
+    });
+    if (!resp.ok) return;
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.onended = () => URL.revokeObjectURL(url);
+    audio.play();
+  } catch(e) {}
+}
+
+function playCardTTS(btn, text) {
+  btn.textContent = '⏳';
+  playTTS(text).then(() => { btn.textContent = '🔊'; }).catch(() => { btn.textContent = '🔊'; });
+}
+
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.tts-card-btn');
+  if (btn && btn.dataset.ttsText) playCardTTS(btn, btn.dataset.ttsText);
+});
+
+function copyCard(btn) {
+  const content = btn.closest('.card-output')?.querySelector('.content')?.textContent;
+  if (content) navigator.clipboard.writeText(content);
+}
+
+document.getElementById('input').focus();
+
+// Enter envía el mensaje (Shift+Enter = nueva línea)
+document.getElementById('input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+</script>
+
+<!-- ═══════ Cuentos (Stories) ═══════ -->
+<style>
+#stories-panel{position:fixed;inset:0;z-index:50;background:var(--bg);padding:48px 24px;overflow:auto;display:none}
+#stories-panel .sp-head{display:flex;align-items:center;gap:16px;margin-bottom:32px;max-width:1080px;margin-left:auto;margin-right:auto}
+#stories-panel h2{font-size:22px;font-weight:300;letter-spacing:-.01em;flex:1}
+.sp-close{background:var(--surface);border:1px solid var(--border);color:var(--text-2);padding:10px 18px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.sp-close:hover{border-color:var(--accent);color:var(--text)}
+.sp-wrap{max-width:1080px;margin:0 auto}
+.sp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1px;background:var(--border);max-width:1080px;margin:0 auto}
+.sp-card{background:var(--bg);border:none;padding:24px}
+.sp-card h3{font-size:17px;font-weight:400;margin-bottom:8px}
+.sp-meta{color:var(--text-3);font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
+.sp-card .sp-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.sp-btn{background:var(--accent);border:none;color:#fff;padding:10px 16px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:.08em;text-transform:uppercase;min-height:40px}
+.sp-btn:hover{opacity:.85}
+.sp-btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text-2)}
+.sp-btn.ghost:hover{border-color:var(--text-2);color:var(--text)}
+.sp-input{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;font-family:inherit;font-size:14px;outline:none}
+.sp-input:focus{border-color:var(--accent)}
+.sp-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;align-items:center;max-width:1080px;margin-left:auto;margin-right:auto}
+.sp-row select,.sp-row input{padding:10px 14px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:14px;outline:none}
+.sp-row select:focus,.sp-row input:focus{border-color:var(--accent)}
+.sp-status{color:var(--text-2);font-size:13px;margin:16px 0;min-height:18px;max-width:1080px;margin-left:auto;margin-right:auto}
+</style>
+<div id="stories-panel">
+  <div class="sp-head">
+    <h2>📖 Cuentos — cada personaje con su propia voz (Qwen3-TTS)</h2>
+    <button class="sp-close" onclick="toggleStories()">✕ Cerrar</button>
+  </div>
+  <div class="sp-row">
+    <select id="sp-lang"><option value="es">🇪🇸 Español</option><option value="ja">🇯🇵 Japonés</option><option value="en">🇬🇧 Inglés</option></select>
+    <select id="sp-level"><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option></select>
+    <input id="sp-theme" class="sp-input" placeholder="Tema (ej: un zorro en Tokio)" style="flex:1;min-width:180px">
+    <input id="sp-lines" type="number" value="10" min="4" max="24" style="width:70px" title="líneas">
+    <button class="sp-btn" onclick="generateStory()">✨ Generar cuento</button>
+  </div>
+  <div class="sp-row">
+    <input id="sp-search" class="sp-input" placeholder="Buscar por tema... (semántico)" style="flex:1;min-width:180px">
+    <button class="sp-btn ghost" onclick="searchStories()">🔍 Buscar</button>
+    <button class="sp-btn ghost" onclick="loadStories()">🔄 Todas</button>
+  </div>
+  <div class="sp-status" id="sp-status"></div>
+  <div class="sp-grid" id="sp-list"></div>
+</div>
+<script>
+const SP_EMOJI={narrator:'🎙️',zorro:'🦊',panda:'🐼',dragon:'🐉',conejo:'🐰',buho:'🦉'};
+function toggleStories(){const p=document.getElementById('stories-panel');p.style.display=p.style.display==='none'?'block':'none';if(p.style.display==='block')loadStories();}
+async function apiStories(url,opts){const r=await fetch(url,opts);return r.json();}
+function charEmojis(story){const used=new Set();(story.lines||[]).forEach(l=>used.add(l.speaker));return [...used].map(s=>SP_EMOJI[s]||'✨').join(' ');}
+async function loadStories(){const st=document.getElementById('sp-status');st.textContent='Cargando cuentos...';try{const d=await apiStories('/api/stories');renderStories(d.stories||[]);st.textContent=d.stories.length?d.stories.length+' cuentos guardados':'Sin cuentos aún — genera el primero ✨';}catch(e){st.textContent='Error: '+e.message;}}
+function renderStories(list){const el=document.getElementById('sp-list');el.innerHTML='';if(!list.length){el.innerHTML='<div style="color:var(--muted)">Nada por aquí. Genera un cuento y tendrás audio + búsqueda instantánea.</div>';return;}list.forEach(s=>{const card=document.createElement('div');card.className='sp-card';card.innerHTML='<h3>'+escapeHtml(s.title||'Sin título')+'</h3><div class="sp-meta">'+escapeHtml((s.language||'').toUpperCase())+' · '+escapeHtml(s.level||'')+' · '+escapeHtml(s.theme||'')+' · '+escapeHtml(s.created||'')+'</div><div>'+charEmojis(s)+'</div><div class="sp-actions"><button class="sp-btn" onclick="playStory(\''+escapeHtml(s.id)+'\',this)">'+(s.audio?'▶️ Escuchar':'⏳ Sin audio')+'</button><button class="sp-btn ghost" onclick="showStory(\''+escapeHtml(s.id)+'\')">📄 Ver</button><button class="sp-btn ghost" onclick="deleteStory(\''+escapeHtml(s.id)+'\')">🗑️</button></div>';el.appendChild(card);});}
+function playStory(id,btn){btn.textContent='⏳';const a=new Audio('/api/stories/'+id+'/audio');a.onended=()=>btn.textContent='▶️ Escuchar';a.onerror=()=>{btn.textContent='❌';};a.play();}
+async function showStory(id){const s=await apiStories('/api/stories/'+id);const el=document.getElementById('sp-list');if(!s.lines){return;}el.innerHTML='';const box=document.createElement('div');box.className='sp-card';box.style.gridColumn='1/-1';box.innerHTML='<button class="sp-btn ghost" onclick="loadStories()">← Volver</button><h3>'+escapeHtml(s.title||'')+'</h3><div class="sp-actions" style="margin:12px 0"><button class="sp-btn" onclick="playStory(\''+escapeHtml(s.id)+'\',this)">▶️ Escuchar completo</button></div>';s.lines.forEach(l=>{const em=SP_EMOJI[l.speaker]||'✨';const p=document.createElement('p');p.style.margin='6px 0';p.innerHTML='<span style="color:var(--muted)">'+em+' '+escapeHtml(l.speaker||'')+':</span> '+escapeHtml(l.text||'');box.appendChild(p);});el.appendChild(box);}
+async function deleteStory(id){if(!confirm('¿Eliminar este cuento?'))return;await apiStories('/api/stories/'+id+'/delete',{method:'POST'});loadStories();}
+async function generateStory(){const st=document.getElementById('sp-status');const btn=document.querySelector('#stories-panel .sp-btn');btn.disabled=true;st.textContent='El LLM escribe, Qwen3-TTS clona la voz de cada personaje... (1-2 min)';try{const body={language:document.getElementById('sp-lang').value,level:document.getElementById('sp-level').value,theme:document.getElementById('sp-theme').value,lines:parseInt(document.getElementById('sp-lines').value)||10};const d=await apiStories('/api/stories/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(d.error)throw new Error(d.error);st.textContent='✅ Cuento generado y cacheado (audio + embedding)';document.getElementById('sp-theme').value='';loadStories();}catch(e){st.textContent='Error: '+e.message;}finally{btn.disabled=false;}}
+async function searchStories(){const q=document.getElementById('sp-search').value.trim();const st=document.getElementById('sp-status');if(!q){return loadStories();}st.textContent='Buscando por embeddings...';try{const d=await apiStories('/api/stories/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})});renderStories(d.results||[]);st.textContent=(d.results||[]).length+' resultados para "'+q+'"';}catch(e){st.textContent='Error: '+e.message;}}
+</script>
+</body>
+</html>
